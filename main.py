@@ -104,9 +104,3 @@ if __name__ == "__main__":
     main()
 
 
-################################################################################################
-
-if not prueba_conexion_sql(engine,logger):
-    logger.critical(f"No fue posible conectarse a SQL. Script cancelado",extra={"origen":"script","destino":"SQL"})
-    txt_handler.close()
-    exit(1)    
