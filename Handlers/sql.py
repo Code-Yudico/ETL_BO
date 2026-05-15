@@ -1,6 +1,5 @@
 import time
 import sqlalchemy
-import logging
 from sqlalchemy.exc import DatabaseError, ProgrammingError
 import pandas as pd
 
