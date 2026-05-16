@@ -1,5 +1,6 @@
 import time
 import sqlalchemy
+from sqlalchemy import text
 from sqlalchemy.exc import DatabaseError, ProgrammingError
 import pandas as pd
 
@@ -46,4 +47,38 @@ def sql_pull(engine,view,log):
         return False
     except Exception as e:
         log.error(f"Descarga fallida de {view}: {e}",extra={"origen":"SQL","destino":"dataframe"})
+        return False
+
+def log_cargas(engine, tabla_logs, log):
+    try:
+        query=f"WITH CARGAS AS (SELECT ROW_NUMBER() OVER (PARTITION BY asunto ORDER BY fecha_recepcion DESC) AS rank, * FROM {tabla_logs}) SELECT asunto, fecha_recepcion, fecha_carga FROM CARGAS WHERE RANK = 1"
+        df=pd.read_sql(query,engine)
+        log.info(f"Histórico de ejeciciónes cargado exitosamente desde {tabla_logs}", extra={"origen":"sql","destino":"dataframe"})
+        return df
+    except Exception as e:
+        log.error(f"Error al cargar histórico de ejecuciones. {e}", extra={"origen":"sql","destino":"dataframe"})
+        return False
+    
+
+
+
+def inicializar_tabla_control(engine, tabla, log):
+    ddl = f"""
+    IF OBJECT_ID('{tabla}', 'U') IS NULL
+    BEGIN
+        CREATE TABLE {tabla} (
+            asunto NVARCHAR(255),
+            fecha_recepcion DATETIME2,
+            fecha_carga DATETIME2
+        )
+    END
+    """
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(ddl))
+            conn.commit()
+        log.info(f"Tabla {tabla} verificada/creada.", extra={"origen":"sql","destino":tabla})
+        return True
+    except Exception as e:
+        log.error(f"Error al verificar/crear {tabla}. {e}", extra={"origen":"sql","destino":tabla})
         return False

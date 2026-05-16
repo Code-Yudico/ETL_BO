@@ -6,7 +6,9 @@ import warnings
 import logging
 import urllib
 import sys
-from Handlers.sql import prueba_conexion_sql
+from Handlers.sql import prueba_conexion_sql,inicializar_tabla_control,log_cargas
+from Handlers.outlook import prueba_conexion_outlook
+
 
 
 #   Configurar las credenciales del .env
@@ -40,7 +42,6 @@ def inicializar_logger(base_dir):
 
     #   EJEMPLO DE LLAMAR A logger
     #   logger.info("Conexión exitosa",extra={"origen":"script","destino":"SQL"})
-
 
 def inicializar_engine():
     DB_SERVER=os.getenv("DB_SERVER")
@@ -81,10 +82,27 @@ def main():
     logger= inicializar_logger(BASE_DIR)
     engine=inicializar_engine()
     
+    if not prueba_conexion_sql(logger, engine):
+        exit(1)
 
-    if not prueba_condiciones_de_ejecucion(logger, engine):
+    outlook=prueba_conexion_outlook(logger)
+    if outlook is False:
         exit(1)
     
+    if inicializar_tabla_control(engine, "tabla_control", logger) is False:
+        log_cargas_bool=False
+        logger.warning("Sin acceso a logger de cargas. Se cargará el envío más reciente por cada correo", extra={"origen":"SQL","destino":"script"})
+    else:
+        log_cargas_bool=True
+
+        #Necesario agregar nombre real de tabla de cargas exitosas
+        log_cargas_hist=log_cargas(engine,"¡¡tabla logs!!",logger)
+        if log_cargas_hist is False:
+            logger.warning("No fue posible recuperar el histórico de cargas a dataframe. Se cargará el envío más reciente por cada correo", extra={"origen":"SQL","destino":"script"})    
+
+
+
+
 
     descarga_outlook(logger)
 
