@@ -5,16 +5,26 @@ import zipfile
 
 
 def extrae_zip(ruta,nombre_archivo,log):
-    archivo=f"{ruta}/{nombre_archivo}"
+    ruta_zip=os.path.join(ruta,nombre_archivo)
     try:
-        with zipfile.ZipFile(archivo,"r") as zip:
-            zip.extractall(ruta)    
-        log.info("Archivo extraido exitosamente",extra={"origen":f"Archivo Zip:{nombre_archivo}","destino":f"Carpeta de descargas:{ruta}"})
-        return True
+        with zipfile.ZipFile(ruta_zip,"r") as archivo_zip:
+
+
+            archivos_extraidos=[x for x in archivo_zip.namelist() if not  x.endswith("/")]
+                                                               
+            archivo_zip.extractall(ruta)    
+
+        if not archivos_extraidos:
+            log.warning(f"{nombre_archivo} sin elementos",extra={"origen":f"Archivo Zip:{nombre_archivo}","destino":f"Carpeta de descargas:{ruta}"})    
+            return False
+
+        log.info(f"Archivo/s {archivos_extraidos} extraído/s exitosamente",extra={"origen":f"Archivo Zip:{nombre_archivo}","destino":f"Carpeta de descargas:{ruta}"})
+        return archivos_extraidos
     
     except Exception as e:
         log.error(f"Extracción de Zip fallida. {e}",extra={"origen":f"Archivo Zip:{nombre_archivo}","destino":f"Carpeta de descargas:{ruta}"})
         return False
+
 
 
 def archivo_a_dataframe(ruta_archivo, config,log):
@@ -42,7 +52,7 @@ def archivo_a_dataframe(ruta_archivo, config,log):
     try:
         df.rename(columns=str.lower, inplace=True)
         df.rename(columns=config["nombres_columnas"],inplace=True)
-        log.info(f"Columnas de {nombre}{ext} modificadas exitosamente. Columnas modificadas:{config["nombrecolumnas"]}",extra={"origen":f"{nombre}{ext}","destino":"dataframe"})
+        log.info(f"Columnas de {nombre}{ext} modificadas exitosamente. Columnas modificadas:{config['nombres_columnas']}",extra={"origen":f"{nombre}{ext}","destino":"dataframe"})
         df = df.astype(config["datatypes"])
         return df
 
