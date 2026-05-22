@@ -35,7 +35,6 @@ def sql_push(engine, data, table,log):
         return False
 
 
-
 def sql_pull(engine,view,log):
     query=f"SELECT * FROM {view}"
     try:
@@ -59,8 +58,6 @@ def log_cargas(engine, tabla_logs, log):
         log.error(f"Error al cargar histórico de ejecuciones. {e}", extra={"origen":"sql","destino":"dataframe"})
         return False
     
-
-
 
 def inicializar_tabla_control(engine, tabla, log):
     ddl = f"""

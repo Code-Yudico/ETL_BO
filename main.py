@@ -7,13 +7,8 @@ import logging
 import urllib
 import sys
 from Handlers.sql import prueba_conexion_sql,inicializar_tabla_control,log_cargas
-from Handlers.outlook import prueba_conexion_outlook
-
-
-
-#   Configurar las credenciales del .env
-
-
+from Handlers.outlook import prueba_conexion_outlook, obtener_adjuntos
+from Handlers.transformacion_archivos import  extrae_zip
 
 ################################################################################################
 #   Definición de funciones orquestadoras
@@ -55,11 +50,14 @@ def inicializar_engine():
     engine= create_engine(connection_str_parsed)
     return engine
 
-def prueba_condiciones_de_ejecucion():
-    pass
+def obtener_adjuntos():
+    
 
-def descarga_outlook():
-    pass
+
+
+
+
+
 
 def procesa_archvios():
     pass
@@ -74,7 +72,7 @@ def envio_correos():
     pass
 
 ################################################################################################
-#   dfinición del main
+#  <<< dfinición del main >>>
 
 def main():
     load_dotenv()
@@ -82,29 +80,29 @@ def main():
     logger= inicializar_logger(BASE_DIR)
     engine=inicializar_engine()
     
-    if not prueba_conexion_sql(logger, engine):
+    if not prueba_conexion_sql(engine,logger):
         exit(1)
 
+    #Retorna objeto outlook
     outlook=prueba_conexion_outlook(logger)
     if outlook is False:
         exit(1)
     
-    if inicializar_tabla_control(engine, "tabla_control", logger) is False:
-        log_cargas_bool=False
-        logger.warning("Sin acceso a logger de cargas. Se cargará el envío más reciente por cada correo", extra={"origen":"SQL","destino":"script"})
-    else:
-        log_cargas_bool=True
+    if inicializar_tabla_control(engine, "tbl_historial_cargas_ETL_BO", logger) is False:
+        logger.critical("Error al conectar a SQL para verificar log de cargas. Terminando script.", extra={"origen":"SQL","destino":"script"})
+        exit(1)
 
-        #Necesario agregar nombre real de tabla de cargas exitosas
-        log_cargas_hist=log_cargas(engine,"¡¡tabla logs!!",logger)
-        if log_cargas_hist is False:
-            logger.warning("No fue posible recuperar el histórico de cargas a dataframe. Se cargará el envío más reciente por cada correo", extra={"origen":"SQL","destino":"script"})    
+    #Necesario crear tabla de control de cargas
+    log_cargas_hist=log_cargas(engine,"tbl_historial_cargas_ETL_BO",logger)
+    if log_cargas_hist is False:
+        logger.critical("Error al conectar a SQL para recuperar cargas. Terminando script.", extra={"origen":"SQL","destino":"script"})
+        exit(1)
 
-
-
+### orquestador flujo de descarga de adjuntos
 
 
-    descarga_outlook(logger)
+###
+
 
     procesa_archvios(logger)
 
@@ -116,7 +114,7 @@ def main():
 
 
 ################################################################################################
-#   main
+#   <<< main >>>
 
 if __name__ == "__main__":
     main()

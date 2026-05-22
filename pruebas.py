@@ -138,4 +138,39 @@ if not prueba_conexion_sql(engine,logger):
     txt_handler.close()
     exit(1)    
 
+"""
+1 correos_a_descargar = buscar_coreos(outlook, asuntos, log_hist, log)
 
+2 si correos_a_descargar is false terminar ejecución
+
+3 correos_descargados = descargar_correos(correos_a_descargar,dir_temp,log)
+
+4 log de data_descarga
+
+5 si correos_descargados is false terminar ejecución
+
+
+
+6 
+
+
+correos_finales=[]
+para cada elemento_de_la_lista en correos_descargados:
+	nuevos_archivos=[]
+	para cada adjunto en elemento_de_la_lista["archivos"]
+		si adjunto termina en .zip:
+			archivos_extraidos = extrae_zip()
+			si archivos_extraidos:
+				nuevos_archivos.extend(archivos_extraidos)
+                os.remove(os.path.join(dir_temp,adjunto))
+			else:
+                log.warning(f"Zip {adjunto} del asunto {elemento_de_la_lista["asunto"]} no pudo extraerse y ha sido omitido")
+		else:
+			nuevos_archivos.append(adjunto)
+	if nuevos_archivos:
+        elemento_de_la_lista["archivos"] = nuevos_archivos
+        correos_finales.append(elemento_de_la_lista)
+	else:	
+        log.warning(f"Correo {elemento_de_la_lista["asunto"]} quedó sin archivos válidos después de procesar adjuntos")
+return correos finales
+"""
